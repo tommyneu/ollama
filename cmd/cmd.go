@@ -495,6 +495,7 @@ func generateInteractive(cmd *cobra.Command, model string) error {
 		fmt.Fprintln(os.Stderr, "Available Commands:")
 		fmt.Fprintln(os.Stderr, "  /set         Set session variables")
 		fmt.Fprintln(os.Stderr, "  /show        Show model information")
+		fmt.Fprintln(os.Stderr, "  /clear       Clear screen")
 		fmt.Fprintln(os.Stderr, "  /bye         Exit")
 		fmt.Fprintln(os.Stderr, "  /?, /help    Help for a command")
 		fmt.Fprintln(os.Stderr, "")
@@ -677,6 +678,25 @@ func generateInteractive(cmd *cobra.Command, model string) error {
 				}
 			} else {
 				usage()
+			}
+		case strings.HasPrefix(line, "/clear"), strings.HasPrefix(line, "/clear"):
+			if runtime.GOOS == "windows" {
+				inWSL := false
+				unameOutput, err := exec.Command("uname", "-a").Output()
+				if err == nil {
+					if strings.Contains(strings.ToLower(string(unameOutput)), "microsoft") {
+						inWSL = true
+					}
+				}
+				if !inWSL {
+					if err := exec.Command("cmd", "/c", "cls").Run(); err != nil {
+						return err
+					}
+				}
+			} else {
+				if err := exec.Command("clear").Run(); err != nil {
+					return err
+				}
 			}
 		case line == "/exit", line == "/bye":
 			return nil
